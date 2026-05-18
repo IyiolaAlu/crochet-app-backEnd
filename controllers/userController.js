@@ -15,7 +15,7 @@ exports.signUp = async (req, res, next) => {
     const user = await User.create({ firstName, lastName, email, password });
     const token = createToken(user._id, user.isAdmin);
     res.cookie("jwtToken", token, { httpOnly: true, maxAge: maxAge * 1000 });
-    res.status(201).json({ user: user._id });
+    res.status(201).json(user);
   } catch (error) {
     next(error);
   }
@@ -28,7 +28,7 @@ exports.login = async (req, res, next) => {
     const user = await User.login(email, password);
     const token = createToken(user._id, user.isAdmin);
     res.cookie("jwtToken", token, { httpOnly: true, maxAge: maxAge * 1000 });
-    res.status(201).json({ user: user._id });
+    res.status(201).json(user);
   } catch (error) {
     next(error);
   }
@@ -54,7 +54,7 @@ exports.me = async (req, res, next) => {
     console.log(user);
     
     if (user) {
-      return res.status(200).json({user});
+      return res.status(200).json(user);
     } else {
       return res.status(404).json({ message: "User not found" });
     }
