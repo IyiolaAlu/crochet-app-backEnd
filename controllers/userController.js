@@ -37,7 +37,7 @@ exports.login = async (req, res, next) => {
     const user = await User.login(email, password)
     const token = createToken(user._id, user.isAdmin)
     const userData = await User.findById(user._id).select("-password")
-    res.status(200).json({ user: userData, token })  // 👈 send token in body
+    res.status(200).json({ user: userData, token }) 
   } catch (error) {
     next(error)
   }
