@@ -8,14 +8,6 @@ const createToken = (id, isAdmin) => {
   });
 };
 
-// Cookie options for production
-const cookieOptions = {
-  httpOnly: true,
-  maxAge: maxAge * 1000,
-  secure: true,        // Required for HTTPS
-  sameSite: 'none',    // Required for cross-domain (Vercel → Render)
-  domain: '.onrender.com'
-};
 
 exports.signUp = async (req, res, next) => {
   const { firstName, lastName, email, password } = req.body;
@@ -23,25 +15,9 @@ exports.signUp = async (req, res, next) => {
   try {
     const user = await User.create({ firstName, lastName, email, password });
     const token = createToken(user._id, user.isAdmin);
-    res.cookie("jwtToken", token, cookieOptions);
     
     const userData = await User.findById(user._id).select("-password");
-    res.status(201).json(userData);
-  } catch (error) {
-    next(error);
-  }
-};
-
-exports.login = async (req, res, next) => {
-  const { email, password } = req.body;
-
-  try {
-    const user = await User.login(email, password);
-    const token = createToken(user._id, user.isAdmin);
-    res.cookie("jwtToken", token, cookieOptions);
-    
-    const userData = await User.findById(user._id).select("-password");
-    res.status(200).json(userData);
+    res.status(201).json({ user: userData, token });
   } catch (error) {
     next(error);
   }
@@ -49,17 +25,23 @@ exports.login = async (req, res, next) => {
 
 exports.logout = (req, res, next) => {
   try {
-    res.clearCookie("jwtToken", {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      domain: '.onrender.com'
-    });
     res.status(200).json({ message: "User Logged Out" });
   } catch (error) {
     next(error);
   }
 };
+
+exports.login = async (req, res, next) => {
+  const { email, password } = req.body
+  try {
+    const user = await User.login(email, password)
+    const token = createToken(user._id, user.isAdmin)
+    const userData = await User.findById(user._id).select("-password")
+    res.status(200).json({ user: userData, token })  // 👈 send token in body
+  } catch (error) {
+    next(error)
+  }
+}
 
 exports.me = async (req, res, next) => {
   try {
